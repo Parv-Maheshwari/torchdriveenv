@@ -10,7 +10,7 @@ import json
 import pickle
 import random
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
 from typing import Optional, List, Dict, Tuple
@@ -32,7 +32,7 @@ from torchdrivesim.traffic_lights import current_light_state_tensor_from_control
 from torchdrivesim.simulator import TorchDriveConfig, SimulatorInterface, \
     BirdviewRecordingWrapper, Simulator, HomogeneousWrapper, CollisionMetric
 
-from torchdriveenv.helpers import save_video, set_seeds, sample_waypoints_from_graph
+from torchdriveenv.helpers import save_video, set_seeds, sample_waypoints_from_graph, convert_to_json
 from torchdriveenv.iai import iai_conditional_initialize, iai_blame
 from torchdriveenv.record_data import OfflineDataRecordingWrapper
 
@@ -442,8 +442,17 @@ class WaypointSuiteEnv(GymEnv):
             if self.data_index >= 0:
                 self.episode_data.location = self.location
                 if len(self.episode_data.step_data) > 0:
-                    with open(f"{self.episode_data_dir}/episode_{self.data_index}_{random.randint(0, 100000)}.pkl", "wb") as f:
-                        pickle.dump(self.episode_data, f)
+#                    with open(f"{self.episode_data_dir}/episode_{self.data_index}_{random.randint(0, 100000)}.pkl", "wb") as f:
+#                        pickle.dump(self.episode_data, f)
+                    episode_dict = convert_to_json(asdict(self.episode_data))
+
+#                    print("episode_dict")
+#                    print(episode_dict)
+
+                    # Save to JSON
+                    with open(f"{self.episode_data_dir}/episode_{self.data_index}_{random.randint(0, 100000)}.pkl", "w") as f:
+                        json.dump(episode_dict, f, indent=4)
+
             self.episode_data = EpisodeData(location="", step_data=[])
 
         if self.config.record_replay_data:

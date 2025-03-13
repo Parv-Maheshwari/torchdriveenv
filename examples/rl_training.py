@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0, "../")
 sys.path.insert(0, "../torchdrivesim/")
+sys.path.insert(0, "../stable-baselines3/")
 
 import time
 import torch
@@ -19,8 +20,12 @@ from wandb.integration.sb3 import WandbCallback
 
 rl_training_config = load_rl_training_config("env_configs/rl_training.yml")
 env_config = rl_training_config.env
-training_data = load_waypoint_suite_data("data/validation_cases.yml")
-validation_data = load_waypoint_suite_data("data/validation_cases.yml")
+# training_data = load_waypoint_suite_data("data/validation_cases.yml")
+# validation_data = load_waypoint_suite_data("data/validation_cases.yml")
+# training_data = load_waypoint_suite_data("../torchdriveenv/data/traffic_lights.yml")
+# training_data = load_waypoint_suite_data("../torchdriveenv/data/traffic_lights.yml")
+training_data = load_waypoint_suite_data("../torchdriveenv/data/parked_car.yml")
+validation_data = load_waypoint_suite_data("../torchdriveenv/data/validation_cases.yml")
 
 #training_data = load_labeled_data("/home/kezhang/work/fall_2024/energy-based-diffusion-model/labeled_data")
 #validation_data = load_labeled_data("/home/kezhang/work/fall_2024/energy-based-diffusion-model/labeled_data")

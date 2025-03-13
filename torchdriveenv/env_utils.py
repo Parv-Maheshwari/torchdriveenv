@@ -32,6 +32,19 @@ def load_waypoint_suite_data(yaml_path):
                                          if scenario is not None else None for scenario in waypoint_suite_data.scenarios]
     return waypoint_suite_data
 
+
+def convert_tensors(obj):
+    if isinstance(obj, torch.Tensor):
+        return obj.tolist()  # Convert to list
+    elif isinstance(obj, dict):
+        return {k: convert_tensors(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_tensors(i) for i in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_tensors(i) for i in obj)
+    return obj
+
+
 def load_labeled_data(data_dir):
     json_files = os.listdir(data_dir)
 

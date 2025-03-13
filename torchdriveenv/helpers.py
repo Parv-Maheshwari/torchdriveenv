@@ -48,6 +48,20 @@ def save_video(imgs, filename, batch_index=0, fps=10, web_browser_friendly=False
         os.remove(temp_filename)
 
 
+def convert_to_json(obj):
+    if isinstance(obj, torch.Tensor):
+        return obj.tolist()  # Convert to list
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()  # Convert to list
+    if isinstance(obj, dict):
+        return {k: convert_to_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [convert_to_json(i) for i in obj]
+    if isinstance(obj, tuple):
+        return tuple(convert_to_json(i) for i in obj)
+    return obj
+
+
 def set_seeds(seed, logger=None):
     if seed is None:
         seed = np.random.randint(low=0, high=2**32 - 1)
