@@ -28,10 +28,11 @@ RUN apt update && apt install -y build-essential cmake autoconf ninja-build \
 RUN pip install -U pip
 RUN pip install lanelet2
 RUN pip install opencv-python
-RUN pip install gymnasium[classic-control] stable-baselines3
+RUN pip install gymnasium[classic-control] stable-baselines3==2.2.1
+RUN pip install gymnasium==0.29.1
 RUN pip install wandb tensorboard moviepy
 RUN pip install jupyter notebook
 RUN pip install omegaconf scipy shapely
 RUN pip install invertedai
-RUN pip install torchdrivesim
+RUN pip install torchdrivesim==0.2.3
 RUN pip install torchdriveenv[baselines]
