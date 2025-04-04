@@ -2,22 +2,30 @@ version: '3.8'
 services:
   rl-training:
     image: torchdriveenv-first-release:latest
-    working_dir: /opt/torchdriveenv/examples
-    command: bash -c "python rl_training.py"
+    working_dir: /opt/torchdriveenv
+    # command: bash -c "python rl_training.py"
     tty: true
+    runtime: nvidia
     volumes:
       - type: bind
-        source: examples
-        target: /opt/torchdriveenv/examples
+        source: .
+        target: /opt/torchdriveenv
+      - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - IAI_API_KEY=${IAI_API_KEY}
       - WANDB_API_KEY=${WANDB_API_KEY}
+      #I want display
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
     deploy:
       resources:
         reservations:
           devices:
-          - driver: nvidia
-            capabilities: [gpu]
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   notebook:
     image: torchdriveenv-first-release:latest
