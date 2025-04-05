@@ -7,10 +7,10 @@ __pycache__/
 *.so
 
 # Logging folders
-examples/runs*
-examples/videos*
-examples/wandb*
-examples/models*
+**/runs*
+**/videos/**
+**/wandb/**
+**/models/**
 examples/eval_*
 
 # Distribution / packaging
