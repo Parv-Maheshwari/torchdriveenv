@@ -16,6 +16,9 @@ RUN apt install -y nvidia-modprobe
 RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/root/.bash_history" \
     && echo "$SNIPPET" >> "/root/.bashrc"
 
+RUN TORCHDRIVEENV_PATH="export PYTHONPATH=/opt/torchdriveenv/:$PYTHONPATH" \
+    && echo "$TORCHDRIVEENV_PATH" >> "/root/.bashrc"
+
 # Install pytorch and pytorch3d
 RUN pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 -f https://download.pytorch.org/whl/torch_stable.html
 RUN pip install pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu117_pyt1131/download.html
@@ -35,4 +38,4 @@ RUN pip install jupyter notebook
 RUN pip install omegaconf scipy shapely
 RUN pip install invertedai
 RUN pip install torchdrivesim==0.2.3
-RUN pip install torchdriveenv[baselines]
+# RUN pip install torchdriveenv[baselines]
