@@ -69,75 +69,106 @@ class EvalNTimestepsCallback(BaseCallback):
 
 
     def _evaluate(self) -> bool:
-        self.episode_num = 0
-        self.offroad_num = 0
-        self.collision_num = 0
-        self.traffic_light_violation_num = 0
-        self.success_num = 0
-        self.reached_waypoint_nums = []
-        self.psi_smoothness = []
-        self.speed_smoothness = []
+        difficulty_level_list = []
+        difficulty_level = self.max_agents_dict['level']
+        difficulty_level.append("level_all")
+        
+        if self.max_agents_dict['eval_mode']['only_all']:
+            difficulty_level_dict = {}
+            difficulty_level_dict['level'] = "level_all"
+            difficulty_level_dict['min_agents'] = 0
+            difficulty_level_dict['max_agents'] = 120
+            difficulty_level_list.append(difficulty_level_dict)
+        else:
+            for difficulty_idx in range(len(difficulty_level)):
+                difficulty_level_dict = {}
+                difficulty_level_dict['level'] = difficulty_level[difficulty_idx]
+                if difficulty_idx == 0 or difficulty_idx == len(difficulty_level)-1:
+                    difficulty_level_dict['min_agents'] = 0
+                else:
+                    difficulty_level_dict['min_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
+                if difficulty_idx == len(difficulty_level)-1:
+                    difficulty_level_dict['max_agents'] = 120
+                else:
+                    print(f"difficulty_idx {difficulty_idx} len(self.max_agents_dict['max_agents']) {self.max_agents_dict['max_agents']}")
+                    difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx]
+                difficulty_level_list.append(difficulty_level_dict)
+            
+            
+        for difficulty_idx in range(len(difficulty_level_list)):
+            
+            cur_difficulty_dict = difficulty_level_list[difficulty_idx]
+            cur_difficulty_max_agents = cur_difficulty_dict['max_agents']
+            cur_difficulty_min_agents = cur_difficulty_dict['min_agents']
+            cur_difficulty_level = cur_difficulty_dict['level']
+            
+        
+            self.episode_num = 0
+            self.offroad_num = 0
+            self.collision_num = 0
+            self.traffic_light_violation_num = 0
+            self.success_num = 0
+            self.reached_waypoint_nums = []
+            self.psi_smoothness = []
+            self.speed_smoothness = []
 
-        mean_episode_reward = 0
-        mean_episode_length = 0
-        for i in range(self.eval_n_episodes):
-            self.psi_smoothness_for_single_episode = []
-            self.speed_smoothness_for_single_episode = []
-            episode_rewards, episode_lengths = evaluate_policy(
-                self.model,
-                self.eval_env,
-                n_eval_episodes=1,
-                deterministic=self.deterministic,
-                return_episode_rewards=True,
-                callback=self._calc_metrics,
-            )
-            mean_episode_reward += sum(episode_rewards) / len(episode_rewards)
-            mean_episode_length += sum(episode_lengths) / len(episode_lengths)
+            mean_episode_reward = 0
+            mean_episode_length = 0
+            self.eval_env.env_method("set_max_num_of_agents", cur_difficulty_max_agents)
+            self.eval_env.env_method("set_min_num_of_agents", cur_difficulty_min_agents)
+            for i in range(self.eval_n_episodes):
+                self.psi_smoothness_for_single_episode = []
+                self.speed_smoothness_for_single_episode = []
+                episode_rewards, episode_lengths = evaluate_policy(
+                    self.model,
+                    self.eval_env,
+                    n_eval_episodes=1,
+                    deterministic=self.deterministic,
+                    return_episode_rewards=True,
+                    callback=self._calc_metrics,
+                )
+                mean_episode_reward += sum(episode_rewards) / len(episode_rewards)
+                mean_episode_length += sum(episode_lengths) / len(episode_lengths)
 
-        mean_episode_reward /= self.eval_n_episodes
-        mean_episode_length /= self.eval_n_episodes
-        self.eval_env.remotes[0].send(("get_attr", "agent_num"))
-        agent_num = self.eval_env.remotes[0].recv()
-        self.eval_env.remotes[0].send(("get_attr", "agent_density"))
-        agent_density = self.eval_env.remotes[0].recv()
-        self.logger.record(f"{self.log_tab}/mean_episode_reward", mean_episode_reward)
-        self.logger.record(f"{self.log_tab}/mean_episode_length", mean_episode_length)
+            mean_episode_reward /= self.eval_n_episodes
+            mean_episode_length /= self.eval_n_episodes
+            self.eval_env.remotes[0].send(("get_attr", "agent_num"))
+            agent_num = self.eval_env.remotes[0].recv()
+            self.eval_env.remotes[0].send(("get_attr", "agent_density"))
+            agent_density = self.eval_env.remotes[0].recv()
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/agent_num", agent_num)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/mean_episode_reward", mean_episode_reward)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/mean_episode_length", mean_episode_length)
 
-        self.logger.record(f"{self.log_tab}/offroad_rate", self.offroad_num / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/collision_rate", self.collision_num / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/traffic_light_violation_rate", self.traffic_light_violation_num / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/success_percentage", self.success_num / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/reached_waypoint_num", sum(self.reached_waypoint_nums) / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/psi_smoothness", sum(self.psi_smoothness) / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/speed_smoothness", sum(self.speed_smoothness) / self.eval_n_episodes)
-        self.logger.record(f"{self.log_tab}/self.model.num_timesteps", self.model.num_timesteps)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/offroad_rate", self.offroad_num / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/collision_rate", self.collision_num / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/traffic_light_violation_rate", self.traffic_light_violation_num / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/success_percentage", self.success_num / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/reached_waypoint_num", sum(self.reached_waypoint_nums) / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/psi_smoothness", sum(self.psi_smoothness) / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/speed_smoothness", sum(self.speed_smoothness) / self.eval_n_episodes)
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/self.model.num_timesteps", self.model.num_timesteps)
 
+        
         for itr in range(len(self.max_agents_dict['timesteps'])):
             if self.model.num_timesteps < self.max_agents_dict['timesteps'][itr]:
                 break
         
-        print(f"Eval env {itr} self.model.num_timesteps {self.model.num_timesteps} Callback max_num: {self.max_agents_dict['max_agents'][itr]} timestep_in_list: {self.max_agents_dict['timesteps'][itr]}")
+        print(f"Eval idx {itr} self.model.num_timesteps {self.model.num_timesteps} Callback max_num: {self.max_agents_dict['max_agents'][itr]} timestep_in_list: {self.max_agents_dict['timesteps'][itr]}")
             
     
         max_agent_num = self.max_agents_dict['max_agents'][itr]
         min_agent_num = 0
-        self.model.env.set_attr("cur_max_num_of_agents",max_agent_num)
-        self.model.env.set_attr("cur_min_num_of_agents",min_agent_num)
-        for itr in range(len(self.model.env.remotes)):
-            # print(f"Eval env {itr} Callback actual max_num: {max_agent_num}")
-            # print(f"Eval env {itr} Callback actual min_num: {min_agent_num}")
-            # self.model.env.send(("set_attr", ["cur_max_num_of_agents",max_agent_num]))
-            # self.model.env.send(("set_attr", ["cur_min_num_of_agents",min_agent_num]))
-            
+        self.model.env.env_method("set_max_num_of_agents", max_agent_num)
+        self.model.env.env_method("set_min_num_of_agents", min_agent_num)
 
+        for itr in range(len(self.model.env.remotes)):
             self.model.env.remotes[itr].send(("get_attr", "cur_max_num_of_agents"))
             temp_max_num = self.model.env.remotes[itr].recv()
             self.model.env.remotes[itr].send(("get_attr", "cur_min_num_of_agents"))
             temp_min_num = self.model.env.remotes[itr].recv()
             print(f"Eval env {itr} Callback cur_max_num: {temp_max_num}")
             print(f"Eval env {itr} Callback cur_min_num: {temp_min_num}")
-            # print(f"Eval env {itr} Callback actual max_num: {max_agent_num}")
-            # print(f"Eval env {itr} Callback actual min_num: {min_agent_num}")
     def _on_training_start(self) -> None:
         self._evaluate()
 
@@ -161,7 +192,7 @@ def make_val_env_(env_config):
 if __name__=='__main__':
     
     #TODO
-    # pass max and min number for eval_env also
+    # see why is level wise eval was getting stuck
     parser = argparse.ArgumentParser(
                     prog='tde_examples',
                     description='execute benchmarks for tde')
@@ -217,6 +248,8 @@ if __name__=='__main__':
     max_agents_dict = {}
     max_agents_dict['timesteps'] =env_config.num_of_agents_timestep
     max_agents_dict['max_agents'] = env_config.num_of_agents
+    max_agents_dict['level'] = [x['level'] for x in env_config.difficulty_sets]
+    max_agents_dict['eval_mode'] = env_config.eval_mode
  
     eval_val_env = SubprocVecEnv([make_val_env])
     eval_val_env = VecFrameStack(eval_val_env, n_stack=rl_training_config.env.frame_stack, channels_order="first")

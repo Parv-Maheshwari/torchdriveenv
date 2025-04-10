@@ -1,7 +1,7 @@
 algorithm: sac
 project: "paper-experiments" 
 total_timesteps: 2000
-parallel_env_num: 2
+parallel_env_num: 1
 record_training_examples: true  
  
 eval_val_callback:
@@ -31,8 +31,11 @@ env:
   distance_cutoff: 0.25
   num_of_agents: [25,50,75,100]
   num_of_agents_timestep: [600, 1000, 1500, 2000]
+  eval_mode:
+    only_all: True
   difficulty_sets:
-  - min_num: 1
+  - level: "level_1"
+    min_num: 1
     max_num: 25
     map_names: 
       - "carla_Town01_5_306.json"
@@ -50,7 +53,8 @@ env:
       - "carla_Town10HD_5_417.json"
       - "carla_Town10HD_5_576.json"
       - "carla_Town10HD_5_840.json"
-  - min_num: 26
+  - level: "level_2"
+    min_num: 26
     max_num: 50
     map_names: 
       - "carla_Town03_5_216.json"
@@ -76,59 +80,60 @@ env:
       - "carla_Town02_10_131.json"
       - "carla_Town07_10_31.json"
       - "carla_Town07_10_760.json"
-      - 
-  - min_num: 51 
+  - level: "level_3"
+    min_num: 51 
     max_num: 75
     map_names:
-    - "carla_Town01_15_15.json"
-    - "carla_Town01_15_575.json"
-    - "carla_Town01_15_673.json"
-    - "carla_Town01_15_770.json"
-    - "carla_Town02_15_142.json"
-    - "carla_Town02_15_270.json"
-    - "carla_Town02_15_342.json"
-    - "carla_Town02_15_568.json"
-    - "carla_Town02_15_795.json"
-    - "carla_Town02_15_9.json"
-    - "carla_Town02_15_920.json"
-    - "carla_Town07_15_103.json"
-    - "carla_Town07_15_205.json"
-    - "carla_Town07_15_447.json"
-    - "carla_Town07_15_863.json"
-    - "carla_Town10HD_15_257.json"
-    - "carla_Town10HD_15_605.json"
-    - "carla_Town10HD_15_647.json"
-    - "carla_Town10HD_15_676.json"
-    - "carla_Town02_18_345.json"
-  - min_num: 76
+      - "carla_Town01_15_15.json"
+      - "carla_Town01_15_575.json"
+      - "carla_Town01_15_673.json"
+      - "carla_Town01_15_770.json"
+      - "carla_Town02_15_142.json"
+      - "carla_Town02_15_270.json"
+      - "carla_Town02_15_342.json"
+      - "carla_Town02_15_568.json"
+      - "carla_Town02_15_795.json"
+      - "carla_Town02_15_9.json"
+      - "carla_Town02_15_920.json"
+      - "carla_Town07_15_103.json"
+      - "carla_Town07_15_205.json"
+      - "carla_Town07_15_447.json"
+      - "carla_Town07_15_863.json"
+      - "carla_Town10HD_15_257.json"
+      - "carla_Town10HD_15_605.json"
+      - "carla_Town10HD_15_647.json"
+      - "carla_Town10HD_15_676.json"
+      - "carla_Town02_18_345.json"
+  - level: "level_4"
+    min_num: 76
     max_num: 100
     map_names:
-    - "carla_Town03_5_271.json"
-    - "carla_Town03_5_294.json"
-    - "carla_Town03_5_378.json"
-    - "carla_Town03_5_42.json"
-    - "carla_Town03_5_443.json"
-    - "carla_Town03_5_522.json"
-    - "carla_Town03_5_542.json"
-    - "carla_Town03_5_565.json"
-    - "carla_Town03_5_663.json"
-    - "carla_Town03_5_701.json"
-    - "carla_Town03_5_733.json"
-    - "carla_Town03_5_757.json"
-    - "carla_Town03_5_839.json"
-    - "carla_Town03_5_932.json"
-    - "carla_Town03_5_96.json"
-    - "carla_Town03_5_993.json"
-    - "carla_Town01_15_15.json"
-    - "carla_Town01_15_575.json"
-    - "carla_Town02_15_142.json"
-    - "carla_Town02_15_568.json"
-    - "carla_Town02_15_795.json"
-    - "carla_Town02_15_9.json"
-    - "carla_Town02_15_920.json"
-    - "carla_Town07_15_863.json"
-    - "carla_Town10HD_15_257.json"
-    - "carla_Town10HD_15_605.json"
-    - "carla_Town10HD_15_647.json"
-    - "carla_Town10HD_15_676.json"
-    - "carla_Town02_18_345.json"
+      - "carla_Town03_5_271.json"
+      - "carla_Town03_5_294.json"
+      - "carla_Town03_5_378.json"
+      - "carla_Town03_5_42.json"
+      - "carla_Town03_5_443.json"
+      - "carla_Town03_5_522.json"
+      - "carla_Town03_5_542.json"
+      - "carla_Town03_5_565.json"
+      - "carla_Town03_5_663.json"
+      - "carla_Town03_5_701.json"
+      - "carla_Town03_5_733.json"
+      - "carla_Town03_5_757.json"
+      - "carla_Town03_5_839.json"
+      - "carla_Town03_5_932.json"
+      - "carla_Town03_5_96.json"
+      - "carla_Town03_5_993.json"
+      - "carla_Town01_15_15.json"
+      - "carla_Town01_15_575.json"
+      - "carla_Town02_15_142.json"
+      - "carla_Town02_15_568.json"
+      - "carla_Town02_15_795.json"
+      - "carla_Town02_15_9.json"
+      - "carla_Town02_15_920.json"
+      - "carla_Town07_15_863.json"
+      - "carla_Town10HD_15_257.json"
+      - "carla_Town10HD_15_605.json"
+      - "carla_Town10HD_15_647.json"
+      - "carla_Town10HD_15_676.json"
+      - "carla_Town02_18_345.json"

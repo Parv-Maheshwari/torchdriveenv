@@ -55,6 +55,7 @@ class EnvConfig:
     num_of_agents: Optional[list] = None
     num_of_agents_timestep: Optional[list] = None
     difficulty_sets: Optional[list] = None
+    eval_mode: Optional[dict] = None
 @dataclass
 class Scenario:
     agent_states: List[List[float]] = None
@@ -342,12 +343,13 @@ class WaypointSuiteEnv(GymEnv):
         self.waypoint_suite = data.waypoint_suite
         self.car_sequence_suite = data.car_sequence_suite
         self.scenarios = data.scenarios
+        print("Initializing WaypointSuiteEnv")
         if self.config.num_of_agents is None:
             self.cur_max_num_of_agents = np.inf
             self.cur_min_num_of_agents = 0
             self.allowed_maps = None
         else:
-            self.cur_max_num_of_agents = self.config.num_of_agents[0]
+            self.cur_max_num_of_agents = 100
             self.cur_min_num_of_agents = 0
             self.allowed_maps = None
         super().__init__(cfg=self.config, simulator=None)
@@ -373,7 +375,7 @@ class WaypointSuiteEnv(GymEnv):
         else:
             count =0
             while True:
-                #find a map_name that is in the allowed_maps
+                #find a map_name that is in the allowed_maps   
                 self.current_waypoint_suite_idx = np.random.randint(len(self.waypoint_suite))
                 map_name = self.locations[self.current_waypoint_suite_idx]
                 map_list_all_density_and_seeds = []
@@ -420,7 +422,10 @@ class WaypointSuiteEnv(GymEnv):
         self.agent_num = agent_num
         self.agent_density = agent_density
         return self.get_obs(), {}
-
+    def set_max_num_of_agents(self, max_num_of_agents):
+        self.cur_max_num_of_agents = max_num_of_agents
+    def set_min_num_of_agents(self, min_num_of_agents):
+        self.cur_min_num_of_agents = min_num_of_agents
     def set_start_pos(self):
         self.waypoints = self.waypoint_suite[self.current_waypoint_suite_idx]
         p0 = np.array(self.waypoints[0])
