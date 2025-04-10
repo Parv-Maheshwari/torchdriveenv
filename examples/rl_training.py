@@ -27,7 +27,7 @@ class EvalNTimestepsCallback(BaseCallback):
     :param n_steps: Number of timesteps between two trigger.
     :param eval_n_episodes: How many episodes to evaluate each time
     """
-    def __init__(self, eval_env, n_steps: int, eval_n_episodes: int, deterministic=False, log_tab="eval"):
+    def __init__(self, eval_env, n_steps: int, eval_n_episodes: int, deterministic=False, log_tab="eval", max_agents_dict={}):
         super().__init__()
         self.log_tab=log_tab
         self.n_steps = n_steps
@@ -35,6 +35,7 @@ class EvalNTimestepsCallback(BaseCallback):
         self.deterministic = deterministic
         self.last_time_trigger = 0
         self.eval_env = eval_env
+        self.max_agents_dict = max_agents_dict
 
     def _calc_metrics(self, locals_: Dict[str, Any], globals_: Dict[str, Any]) -> None:
         """
@@ -95,7 +96,10 @@ class EvalNTimestepsCallback(BaseCallback):
 
         mean_episode_reward /= self.eval_n_episodes
         mean_episode_length /= self.eval_n_episodes
-
+        self.eval_env.remotes[0].send(("get_attr", "agent_num"))
+        agent_num = self.eval_env.remotes[0].recv()
+        self.eval_env.remotes[0].send(("get_attr", "agent_density"))
+        agent_density = self.eval_env.remotes[0].recv()
         self.logger.record(f"{self.log_tab}/mean_episode_reward", mean_episode_reward)
         self.logger.record(f"{self.log_tab}/mean_episode_length", mean_episode_length)
 
@@ -106,8 +110,34 @@ class EvalNTimestepsCallback(BaseCallback):
         self.logger.record(f"{self.log_tab}/reached_waypoint_num", sum(self.reached_waypoint_nums) / self.eval_n_episodes)
         self.logger.record(f"{self.log_tab}/psi_smoothness", sum(self.psi_smoothness) / self.eval_n_episodes)
         self.logger.record(f"{self.log_tab}/speed_smoothness", sum(self.speed_smoothness) / self.eval_n_episodes)
+        self.logger.record(f"{self.log_tab}/self.model.num_timesteps", self.model.num_timesteps)
 
+        for itr in range(len(self.max_agents_dict['timesteps'])):
+            if self.model.num_timesteps < self.max_agents_dict['timesteps'][itr]:
+                break
+        
+        print(f"Eval env {itr} self.model.num_timesteps {self.model.num_timesteps} Callback max_num: {self.max_agents_dict['max_agents'][itr]} timestep_in_list: {self.max_agents_dict['timesteps'][itr]}")
+            
+    
+        max_agent_num = self.max_agents_dict['max_agents'][itr]
+        min_agent_num = 0
+        self.model.env.set_attr("cur_max_num_of_agents",max_agent_num)
+        self.model.env.set_attr("cur_min_num_of_agents",min_agent_num)
+        for itr in range(len(self.model.env.remotes)):
+            # print(f"Eval env {itr} Callback actual max_num: {max_agent_num}")
+            # print(f"Eval env {itr} Callback actual min_num: {min_agent_num}")
+            # self.model.env.send(("set_attr", ["cur_max_num_of_agents",max_agent_num]))
+            # self.model.env.send(("set_attr", ["cur_min_num_of_agents",min_agent_num]))
+            
 
+            self.model.env.remotes[itr].send(("get_attr", "cur_max_num_of_agents"))
+            temp_max_num = self.model.env.remotes[itr].recv()
+            self.model.env.remotes[itr].send(("get_attr", "cur_min_num_of_agents"))
+            temp_min_num = self.model.env.remotes[itr].recv()
+            print(f"Eval env {itr} Callback cur_max_num: {temp_max_num}")
+            print(f"Eval env {itr} Callback cur_min_num: {temp_min_num}")
+            # print(f"Eval env {itr} Callback actual max_num: {max_agent_num}")
+            # print(f"Eval env {itr} Callback actual min_num: {min_agent_num}")
     def _on_training_start(self) -> None:
         self._evaluate()
 
@@ -130,6 +160,8 @@ def make_val_env_(env_config):
 
 if __name__=='__main__':
     
+    #TODO
+    # pass max and min number for eval_env also
     parser = argparse.ArgumentParser(
                     prog='tde_examples',
                     description='execute benchmarks for tde')
@@ -181,12 +213,16 @@ if __name__=='__main__':
         model = TD3("CnnPolicy", env, verbose=1, tensorboard_log=f"runs/{experiment_name}",
                     policy_kwargs={'optimizer_class':torch.optim.Adam}, 
                     train_freq=1, gradient_steps=1)
+        
+    max_agents_dict = {}
+    max_agents_dict['timesteps'] =env_config.num_of_agents_timestep
+    max_agents_dict['max_agents'] = env_config.num_of_agents
  
     eval_val_env = SubprocVecEnv([make_val_env])
     eval_val_env = VecFrameStack(eval_val_env, n_stack=rl_training_config.env.frame_stack, channels_order="first")
     eval_val_callback = EvalNTimestepsCallback(eval_val_env, n_steps=rl_training_config.eval_val_callback['n_steps'], 
                                                  eval_n_episodes=rl_training_config.eval_val_callback['eval_n_episodes'], 
-                                                 deterministic=rl_training_config.eval_val_callback['deterministic'], log_tab="eval_val")
+                                                 deterministic=rl_training_config.eval_val_callback['deterministic'], log_tab="eval_val",max_agents_dict=max_agents_dict)
     
     if rl_training_config.eval_val_callback['record']:
         eval_val_env = VecVideoRecorder(eval_val_env, "videos/"+experiment_name+'/validation',
@@ -196,7 +232,7 @@ if __name__=='__main__':
     eval_train_env = VecFrameStack(eval_train_env, n_stack=rl_training_config.env.frame_stack, channels_order="first")
     eval_train_callback = EvalNTimestepsCallback(eval_train_env, n_steps=rl_training_config.eval_train_callback['n_steps'], 
                                                  eval_n_episodes=rl_training_config.eval_train_callback['eval_n_episodes'], 
-                                                 deterministic=rl_training_config.eval_train_callback['deterministic'], log_tab="eval_train")
+                                                 deterministic=rl_training_config.eval_train_callback['deterministic'], log_tab="eval_train",max_agents_dict=max_agents_dict)  
     
     if rl_training_config.eval_train_callback['record']:
         eval_train_env = VecVideoRecorder(eval_train_env, "videos/"+experiment_name+'/training',
