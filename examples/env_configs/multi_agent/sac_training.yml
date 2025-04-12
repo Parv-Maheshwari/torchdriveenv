@@ -1,8 +1,8 @@
 algorithm: sac
 project: "paper-experiments" 
-total_timesteps: 2000
+total_timesteps: 2e5
 parallel_env_num: 1
-record_training_examples: true  
+record_training_examples: false  #PARV_TODO: See the effect of this on the FPS
  
 eval_val_callback:
   n_steps: 1000
@@ -29,11 +29,14 @@ env:
   heading_penalty: 25.
   distance_bonus: 1.
   distance_cutoff: 0.25
-  num_of_agents: [25,50,75,100]
-  num_of_agents_timestep: [600, 1000, 1500, 2000]
+  num_of_agents: [0,25]
+  num_of_agents_timestep: [1e5,2e5]
   eval_mode:
-    only_all: True
+    only_all: False
   difficulty_sets:
+  - level: "level_0"
+    min_num: 0
+    max_num: 0
   - level: "level_1"
     min_num: 1
     max_num: 25

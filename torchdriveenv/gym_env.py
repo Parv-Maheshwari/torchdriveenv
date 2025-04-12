@@ -186,7 +186,6 @@ def build_simulator(cfg: EnvConfig, map_cfg, device, ego_state, scenario=None, c
         min_num_agents = num_agent_dict['min'] + 1 # +1 to consider ego vehicle
         # print("build_simulator including ego, max_num_agents:", max_num_agents)
         # print("build_simulator including ego, min_num_agents: ", min_num_agents)
-        # print(f" len(num_agent_dict['map_list_all_density_and_seeds']) {len(num_agent_dict['map_list_all_density_and_seeds'])}")
         traffic_light_controller = map_cfg.traffic_light_controller
         initial_light_state_name = traffic_light_controller.current_state_with_name
         traffic_light_ids = [stopline.actor_id for stopline in map_cfg.stoplines if stopline.agent_type == 'traffic_light']
@@ -296,7 +295,7 @@ def build_simulator(cfg: EnvConfig, map_cfg, device, ego_state, scenario=None, c
             agent_states.shape[-2], dtype=torch.bool, device=agent_states.device)
         npc_mask[0] = False
 
-        if not cfg.ego_only:
+        if not (cfg.ego_only or max_num_agents == 1):
 
             if car_sequences is not None and len(car_sequences) > 0:
                 T = max([len(car_seq) for car_seq in car_sequences.values()])
@@ -324,8 +323,11 @@ def build_simulator(cfg: EnvConfig, map_cfg, device, ego_state, scenario=None, c
             simulator = BirdviewRecordingWrapper(
                 simulator, res=Resolution(cfg.video_res, cfg.video_res), fov=cfg.video_fov, to_cpu=True)
         simulator.to(device)
-
-        return simulator,agent_num,background_traffic['agent_density']
+        
+        if cfg.ego_only or max_num_agents == 1:
+            return simulator, agent_num, 0
+        else:
+            return simulator,agent_num,background_traffic['agent_density']
 
 
 class WaypointSuiteEnv(GymEnv):
@@ -349,7 +351,7 @@ class WaypointSuiteEnv(GymEnv):
             self.cur_min_num_of_agents = 0
             self.allowed_maps = None
         else:
-            self.cur_max_num_of_agents = 100
+            self.cur_max_num_of_agents = self.config.num_of_agents[0]
             self.cur_min_num_of_agents = 0
             self.allowed_maps = None
         super().__init__(cfg=self.config, simulator=None)
@@ -369,7 +371,8 @@ class WaypointSuiteEnv(GymEnv):
                     if difficulty_set['min_num'] > self.cur_min_num_of_agents:
                         self.allowed_maps.extend(difficulty_set['map_names'])
         
-        if self.allowed_maps is None:        
+        # self.cur_max_num_of_agents==0 is the single agent case, all maps can be used for single agents
+        if self.allowed_maps is None or self.cur_max_num_of_agents==0:        
             self.current_waypoint_suite_idx = np.random.randint(len(self.waypoint_suite))
             map_cfg = self.map_cfgs[self.current_waypoint_suite_idx]
         else:
@@ -389,7 +392,7 @@ class WaypointSuiteEnv(GymEnv):
                 map_cfg = self.map_cfgs[self.current_waypoint_suite_idx]
                 break
                 
-        num_agent_dict['map_list_all_density_and_seeds'] = map_list_all_density_and_seeds
+            num_agent_dict['map_list_all_density_and_seeds'] = map_list_all_density_and_seeds
         self.lanelet_map = map_cfg.lanelet_map
 
         self.set_start_pos()

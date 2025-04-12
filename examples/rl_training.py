@@ -4,7 +4,7 @@ import wandb
 import gymnasium as gym
 from typing import Any, Dict
 import argparse
-
+from copy import copy
 from stable_baselines3 import SAC, PPO, A2C, TD3
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import VecVideoRecorder, VecFrameStack, SubprocVecEnv
@@ -70,8 +70,8 @@ class EvalNTimestepsCallback(BaseCallback):
 
     def _evaluate(self) -> bool:
         difficulty_level_list = []
-        difficulty_level = self.max_agents_dict['level']
-        difficulty_level.append("level_all")
+        difficulty_level = copy(self.max_agents_dict['level'])
+        # difficulty_level.append("level_all")
         
         if self.max_agents_dict['eval_mode']['only_all']:
             difficulty_level_dict = {}
@@ -83,20 +83,19 @@ class EvalNTimestepsCallback(BaseCallback):
             for difficulty_idx in range(len(difficulty_level)):
                 difficulty_level_dict = {}
                 difficulty_level_dict['level'] = difficulty_level[difficulty_idx]
-                if difficulty_idx == 0 or difficulty_idx == len(difficulty_level)-1:
+                if (difficulty_idx == 0) or (difficulty_level[difficulty_idx] == "level_all"):
                     difficulty_level_dict['min_agents'] = 0
                 else:
                     difficulty_level_dict['min_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
-                if difficulty_idx == len(difficulty_level)-1:
-                    difficulty_level_dict['max_agents'] = 120
+                if difficulty_level[difficulty_idx] == "level_all":
+                    difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
                 else:
-                    print(f"difficulty_idx {difficulty_idx} len(self.max_agents_dict['max_agents']) {self.max_agents_dict['max_agents']}")
                     difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx]
                 difficulty_level_list.append(difficulty_level_dict)
             
             
         for difficulty_idx in range(len(difficulty_level_list)):
-            
+            st = time.time()
             cur_difficulty_dict = difficulty_level_list[difficulty_idx]
             cur_difficulty_max_agents = cur_difficulty_dict['max_agents']
             cur_difficulty_min_agents = cur_difficulty_dict['min_agents']
@@ -129,13 +128,12 @@ class EvalNTimestepsCallback(BaseCallback):
                 )
                 mean_episode_reward += sum(episode_rewards) / len(episode_rewards)
                 mean_episode_length += sum(episode_lengths) / len(episode_lengths)
-
+            eval_env_time = time.time() - st
             mean_episode_reward /= self.eval_n_episodes
             mean_episode_length /= self.eval_n_episodes
             self.eval_env.remotes[0].send(("get_attr", "agent_num"))
             agent_num = self.eval_env.remotes[0].recv()
-            self.eval_env.remotes[0].send(("get_attr", "agent_density"))
-            agent_density = self.eval_env.remotes[0].recv()
+            self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/eval_env_time", eval_env_time)
             self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/agent_num", agent_num)
             self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/mean_episode_reward", mean_episode_reward)
             self.logger.record(f"{self.log_tab}/{cur_difficulty_level}/mean_episode_length", mean_episode_length)
@@ -153,9 +151,7 @@ class EvalNTimestepsCallback(BaseCallback):
         for itr in range(len(self.max_agents_dict['timesteps'])):
             if self.model.num_timesteps < self.max_agents_dict['timesteps'][itr]:
                 break
-        
-        print(f"Eval idx {itr} self.model.num_timesteps {self.model.num_timesteps} Callback max_num: {self.max_agents_dict['max_agents'][itr]} timestep_in_list: {self.max_agents_dict['timesteps'][itr]}")
-            
+                    
     
         max_agent_num = self.max_agents_dict['max_agents'][itr]
         min_agent_num = 0
@@ -248,7 +244,7 @@ if __name__=='__main__':
     max_agents_dict = {}
     max_agents_dict['timesteps'] =env_config.num_of_agents_timestep
     max_agents_dict['max_agents'] = env_config.num_of_agents
-    max_agents_dict['level'] = [x['level'] for x in env_config.difficulty_sets]
+    max_agents_dict['level'] = [x['level'] for x in env_config.difficulty_sets if x['max_num'] in env_config.num_of_agents]
     max_agents_dict['eval_mode'] = env_config.eval_mode
  
     eval_val_env = SubprocVecEnv([make_val_env])
