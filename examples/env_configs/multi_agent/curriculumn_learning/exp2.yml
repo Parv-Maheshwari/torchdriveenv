@@ -1,4 +1,5 @@
 algorithm: sac
+name: "curriculum_learning_exclusive_exp2"
 project: "paper-experiments" 
 total_timesteps: 3e5
 parallel_env_num: 1

@@ -37,7 +37,8 @@ class RlTrainingConfig:
     eval_train_callback: RlCallbackConfig = field(default_factory=lambda:RlCallbackConfig())
     eval_val_callback: RlCallbackConfig = field(default_factory=lambda:RlCallbackConfig())
     wandb_callback: WandbCallbackConfig = field(default_factory=lambda:WandbCallbackConfig())
-
+    name: str = "default"
+    
 def load_rl_training_config(yaml_path):
     config_from_yaml = OmegaConf.to_object(OmegaConf.load(yaml_path))
     rl_training_config = RlTrainingConfig(**config_from_yaml)

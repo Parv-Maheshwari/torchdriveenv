@@ -70,28 +70,33 @@ class EvalNTimestepsCallback(BaseCallback):
 
     def _evaluate(self) -> bool:
         difficulty_level_list = []
-        difficulty_level = copy(self.max_agents_dict['level'])
-        # difficulty_level.append("level_all")
+        difficulty_level = copy(self.max_agents_dict['eval_mode']['level'])
         
-        if self.max_agents_dict['eval_mode']['only_all']:
+        # if self.max_agents_dict['eval_mode']['only_all']:
+        #     difficulty_level_dict = {}
+        #     difficulty_level_dict['level'] = "level_all"
+        #     difficulty_level_dict['min_agents'] = 0
+        #     difficulty_level_dict['max_agents'] = 120
+        #     difficulty_level_list.append(difficulty_level_dict)
+        # else:
+        # for difficulty_idx in range(len(difficulty_level)):
+        #     difficulty_level_dict = {}
+        #     difficulty_level_dict['level'] = difficulty_level[difficulty_idx]
+        #     if (difficulty_idx == 0) or (difficulty_level[difficulty_idx] == "level_all"):
+        #         difficulty_level_dict['min_agents'] = 0
+        #     else:
+        #         difficulty_level_dict['min_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
+        #     if difficulty_level[difficulty_idx] == "level_all":
+        #         difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
+        #     else:
+        #         difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx]
+        #     difficulty_level_list.append(difficulty_level_dict)
+        for difficulty_idx in range(len(difficulty_level)):
             difficulty_level_dict = {}
-            difficulty_level_dict['level'] = "level_all"
-            difficulty_level_dict['min_agents'] = 0
-            difficulty_level_dict['max_agents'] = 120
+            difficulty_level_dict['level'] = difficulty_level[difficulty_idx]
+            difficulty_level_dict['min_agents'] = self.max_agents_dict['eval_mode']['min_agents'][difficulty_idx]
+            difficulty_level_dict['max_agents'] = self.max_agents_dict['eval_mode']['max_agents'][difficulty_idx]
             difficulty_level_list.append(difficulty_level_dict)
-        else:
-            for difficulty_idx in range(len(difficulty_level)):
-                difficulty_level_dict = {}
-                difficulty_level_dict['level'] = difficulty_level[difficulty_idx]
-                if (difficulty_idx == 0) or (difficulty_level[difficulty_idx] == "level_all"):
-                    difficulty_level_dict['min_agents'] = 0
-                else:
-                    difficulty_level_dict['min_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
-                if difficulty_level[difficulty_idx] == "level_all":
-                    difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx-1]
-                else:
-                    difficulty_level_dict['max_agents'] = self.max_agents_dict['max_agents'][difficulty_idx]
-                difficulty_level_list.append(difficulty_level_dict)
             
             
         for difficulty_idx in range(len(difficulty_level_list)):
@@ -205,7 +210,7 @@ if __name__=='__main__':
     config.update( {'env-'+k:v for (k,v) in vars(rl_training_config.env).items() if isinstance(v, (float, int, str, list, dict, tuple, bool))})
     config.update( {'tds-'+k:v for (k,v) in vars(rl_training_config.env.simulator).items() if isinstance(v, (float, int, str, list, dict, tuple, bool))})
      
-    experiment_name = f"{rl_training_config.algorithm}_{int(time.time())}"
+    experiment_name = rl_training_config.name
     wandb.init(
         name=experiment_name,
         project=rl_training_config.project,
@@ -244,7 +249,6 @@ if __name__=='__main__':
     max_agents_dict = {}
     max_agents_dict['timesteps'] =env_config.num_of_agents_timestep
     max_agents_dict['max_agents'] = env_config.num_of_agents
-    max_agents_dict['level'] = [x['level'] for x in env_config.difficulty_sets if x['max_num'] in env_config.num_of_agents]
     max_agents_dict['eval_mode'] = env_config.eval_mode
  
     eval_val_env = SubprocVecEnv([make_val_env])

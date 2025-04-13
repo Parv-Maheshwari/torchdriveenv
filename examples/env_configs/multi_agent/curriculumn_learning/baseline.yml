@@ -1,6 +1,7 @@
 algorithm: sac
+name: "curriculum_learning_not_on_baseline"
 project: "paper-experiments" 
-total_timesteps: 3e5
+total_timesteps: 2e5
 parallel_env_num: 1
 record_training_examples: false  #PARV_TODO: See the effect of this on the FPS
  
@@ -29,8 +30,8 @@ env:
   heading_penalty: 25.
   distance_bonus: 1.
   distance_cutoff: 0.25
-  num_of_agents: [0,25]
-  num_of_agents_timestep: [2e5,3e5]
+  num_of_agents: [25]
+  num_of_agents_timestep: [2e5]
   eval_mode:
     level: ["level_0","level_1"]
     min_agents: [0,1]
