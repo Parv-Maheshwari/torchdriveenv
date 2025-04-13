@@ -34,7 +34,7 @@ env:
   num_of_agents_timestep: [1e5,2e5]
   eval_mode:
     level: ["level_0","level_1"]
-    min_agents: [0,1]
+    min_agents: [0,0]
     max_agents: [0,25]
   difficulty_sets:
   - level: "level_0"
