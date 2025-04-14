@@ -2,7 +2,7 @@ algorithm: sac
 name: "curriculum_learning_baseline_level_0"
 project: "paper-experiments" 
 total_timesteps: 1e6
-parallel_env_num: 1
+parallel_env_num: 10
 record_training_examples: false  #PARV_TODO: See the effect of this on the FPS
  
 eval_val_callback:
