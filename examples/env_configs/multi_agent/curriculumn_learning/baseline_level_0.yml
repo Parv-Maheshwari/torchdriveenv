@@ -1,5 +1,5 @@
 algorithm: sac
-name: "curriculum_learning_not_on_baseline"
+name: "curriculum_learning_baseline_level_0"
 project: "paper-experiments" 
 total_timesteps: 1e6
 parallel_env_num: 1
