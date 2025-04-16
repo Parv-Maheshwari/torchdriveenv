@@ -42,7 +42,7 @@ class ManiSkillWrapper(gym.Wrapper):
 		)
 
 	def reset(self):
-		return self.env.reset()
+		return self.env.reset()[0]
 	
 	def step(self, action):
 		reward = 0

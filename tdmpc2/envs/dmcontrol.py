@@ -65,7 +65,7 @@ class DMControlWrapper:
 
 
 class Pixels(gym.Wrapper):
-	def __init__(self, env, cfg, num_frames=3, size=64):
+	def __init__(self, env, cfg, num_frames=3, size=84):
 		super().__init__(env)
 		self.cfg = cfg
 		self.env = env

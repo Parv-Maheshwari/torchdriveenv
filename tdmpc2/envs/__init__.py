@@ -29,6 +29,10 @@ try:
 	from envs.mujoco import make_env as make_mujoco_env
 except:
 	make_mujoco_env = missing_dependencies
+try:
+	from envs.drive import make_env as make_drive_env
+except:
+	make_drive_env = missing_dependencies
 
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -65,7 +69,7 @@ def make_env(cfg):
 
 	else:
 		env = None
-		for fn in [make_dm_control_env, make_maniskill_env, make_metaworld_env, make_myosuite_env, make_mujoco_env]:
+		for fn in [make_drive_env, make_dm_control_env, make_maniskill_env, make_metaworld_env, make_myosuite_env, make_mujoco_env]:
 			try:
 				env = fn(cfg)
 			except ValueError:
@@ -78,6 +82,11 @@ def make_env(cfg):
 	except: # Box
 		cfg.obs_shape = {cfg.get('obs', 'state'): env.observation_space.shape}
 	cfg.action_dim = env.action_space.shape[0]
-	cfg.episode_length = env.max_episode_steps
+
+	try:
+		cfg.episode_length = env.max_episode_steps
+	except:
+		cfg.episode_length = env.max_environment_steps
+	
 	cfg.seed_steps = max(1000, 5*cfg.episode_length)
 	return env
