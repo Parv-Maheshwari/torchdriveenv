@@ -1,18 +1,18 @@
 algorithm: sac
-name: "curriculum_learning_baseline_level_0"
+name: "curriculum_learning_exclusive_exp3"
 project: "paper-experiments" 
-total_timesteps: 1e6
-parallel_env_num: 4
+total_timesteps: 4e5
+parallel_env_num: 1
 record_training_examples: false  #PARV_TODO: See the effect of this on the FPS
  
 eval_val_callback:
-  n_steps: 10000
+  n_steps: 1000
   eval_n_episodes: 1
   deterministic: true 
   record: true
   
 eval_train_callback:
-  n_steps: 10000
+  n_steps: 1000
   eval_n_episodes: 1
   deterministic: true 
   record: true
@@ -21,7 +21,7 @@ eval_train_callback:
 wandb_callback:
   verbose: true
   gradient_save_freq: -1
-  model_save_freq: 10000
+  model_save_freq: 1000
 
 env:
   ego_only: false
@@ -30,8 +30,8 @@ env:
   heading_penalty: 25.
   distance_bonus: 1.
   distance_cutoff: 0.25
-  num_of_agents: [0]
-  num_of_agents_timestep: [1e6]
+  num_of_agents: [0,25]
+  num_of_agents_timestep: [2e5,4e5]
   eval_mode:
     level: ["level_0","level_1"]
     min_agents: [0,0]
