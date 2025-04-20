@@ -145,3 +145,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.csv
+tdmpc2-backup/
