@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+Hello World!
+
 # TorchDriveEnv
 <p align="center">
   <img src="https://github.com/inverted-ai/torchdriveenv/assets/16724505/9717b838-e1ae-4a21-a815-18c45674fcda.gif" alt="TorchDriveEnv"/>
